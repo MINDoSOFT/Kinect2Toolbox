@@ -101,7 +101,8 @@ int main(void)
 		cvOriDepthImage = cvLoadImage(depth_filenames[i].c_str(), CV_LOAD_IMAGE_ANYDEPTH);
 
 		{
-			cv::Mat cvDepthDispImage(cvOriDepthImage);
+			//cv::Mat cvDepthDispImage(cvOriDepthImage);
+			cv::Mat cvDepthDispImage(cv::cvarrToMat(cvOriDepthImage));
 			cv::Mat adjMap;
 			cv::convertScaleAbs(cvDepthDispImage, adjMap, 255 / 1000.0);
 			cv::imshow("Original Depth Image", adjMap);
@@ -113,19 +114,27 @@ int main(void)
 
 		// ailgned depth image
 		IplImage* cvDepthImage = cvCreateImage(cvSize(cColorWidth, cColorHeight), IPL_DEPTH_16U, 1);
-		for (int iRow = 0; iRow < cColorHeight; iRow++) {
-			for (int iCol = 0; iCol < cColorWidth; iCol++) {
+		for (int iRow = 0; iRow < cDepthHeight; iRow++) {
+		//for (int iRow = 0; iRow < cColorHeight; iRow++) {
+			for (int iCol = 0; iCol < cDepthWidth; iCol++) {
+			//for (int iCol = 0; iCol < cColorWidth; iCol++) {
 				int depthY = CV_IMAGE_ELEM(cvMapperImage, INT16, iRow, iCol*3);
 				int depthX = CV_IMAGE_ELEM(cvMapperImage, INT16, iRow, iCol*3+1);
 
-				if (depthX >= 0 && depthX < cDepthWidth && depthY >= 0 && depthY < cDepthHeight) {
-					cvSet2D(cvDepthImage, iRow, iCol, cvGet2D(cvOriDepthImage, depthY, depthX));
+				if (depthX >= 0 && depthX < cColorWidth && depthY >= 0 && depthY < cColorHeight) {
+				  // To stay within the color image limits
+			      //cvSet2D(cvDepthImage, iRow, iCol, cvGet2D(cvOriDepthImage, depthY, depthX));
+				  cv::Scalar depthValue = cvGet2D(cvOriDepthImage, iRow, iCol);
+
+				  cvSet2D(cvDepthImage, depthY, depthX, depthValue);
+				  //cvSet2D(cvDepthImage, depthX, depthY, depthValue.val[0]);
 				}
 			}
 		}
 
 		{
-			cv::Mat cvDepthDispImage(cvDepthImage);
+			//cv::Mat cvDepthDispImage(cvDepthImage);
+			cv::Mat cvDepthDispImage(cv::cvarrToMat(cvDepthImage));
 			cv::Mat adjMap;
 			cv::convertScaleAbs(cvDepthDispImage, adjMap, 255 / 1000.0);
 
